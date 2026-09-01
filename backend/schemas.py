@@ -139,3 +139,34 @@ class ProposalResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PolicyDecisionResponse(BaseModel):
+    """
+    Response from policy engine authorization.
+    
+    Possible decisions:
+    - ALLOWED: proceed with order
+    - BLOCKED: transaction rejected, no order created
+    - REQUIRE_APPROVAL: waiting for user approval, no order created
+    """
+    decision: str = Field(..., description="ALLOWED | BLOCKED | REQUIRE_APPROVAL")
+    reason_code: str = Field(..., description="Machine-readable reason code")
+    message: str = Field(..., description="Human-readable explanation")
+    details: Optional[dict] = Field(None, description="Additional context (prices, drift %, limits, etc.)")
+
+
+class CheckoutResponse(BaseModel):
+    """
+    Response for POST /proposal/{id}/checkout.
+    
+    Contains:
+    - proposal details
+    - current authoritative price
+    - policy decision
+    """
+    proposal_id: int
+    product_id: int
+    product_name: str
+    authoritative_current_price_paise: int = Field(description="Current price from DB in paise")
+    policy_decision: PolicyDecisionResponse
