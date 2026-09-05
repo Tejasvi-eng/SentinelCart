@@ -796,31 +796,78 @@ These are deliberately out of scope for the current prototype.
 
 ---
 
-# Current AI Status
+# AI Architecture
 
-The current proposal-selection implementation is deterministic and intentionally lightweight.
+SentinelCart uses a hosted LLM only for the recommendation layer.
 
-The architecture isolates the recommendation layer so a hosted model can be introduced without giving it access to transaction authorization.
+The model receives the user's natural-language request together with a small set of candidate products retrieved from the merchant database.
 
-A future recommendation layer can operate as:
+It returns:
+
+```json
+{
+  "product_id": 1,
+  "reasoning": "The headphones match the requested use case and budget."
+}
+```
+
+The model does **not** provide the authoritative price, authorization decision, payment amount, or payment action.
+
+The backend validates the selected product ID against the candidate catalog and then re-fetches the product directly from SQLite. The quoted price snapshot therefore comes exclusively from the authoritative database.
 
 ```text
 User intent
      ↓
-Hosted model
+OpenRouter LLM
      ↓
-{ product_id, reasoning }
+product_id + reasoning
      ↓
 Backend validation
      ↓
-Database-authoritative price
+SQLite authoritative price
      ↓
-Existing policy engine
+Deterministic policy engine
+     ↓
+ALLOWED / BLOCKED / REQUIRE_APPROVAL
+     ↓
+Razorpay
 ```
 
-The financial control path does not depend on model output.
+## AI Failure Safety
 
----
+The AI layer is intentionally non-authoritative.
+
+If the hosted model:
+
+* times out
+* rate-limits
+* returns malformed data
+* returns an unknown product
+* encounters an API failure
+* is not configured
+
+SentinelCart falls back to the existing deterministic product matcher.
+
+This ensures that an AI provider failure cannot bypass or corrupt the transaction-control layer.
+
+### Trust Boundary
+
+The LLM can:
+
+* understand natural-language intent
+* choose a product from supplied candidates
+* explain the recommendation
+
+The LLM cannot:
+
+* set the authoritative price
+* approve or block a transaction
+* modify policy limits
+* create a Razorpay order
+* determine the amount charged
+* verify a payment
+
+The financial control path remains deterministic and independently testable.
 
 # Design Trade-offs
 
