@@ -256,3 +256,21 @@ class TestAuditLogging:
         assert detail["authoritative_price_paise"] == 149900
 
         db.close()
+
+    def test_get_audit_trail_endpoint(self, client):
+        """Verify GET /api/v1/audit/{proposal_id} returns the audit logs."""
+        response = client.post(
+            "/api/v1/intent",
+            json={
+                "user_intent": "I want headphones",
+                "idempotency_key": "test-audit-endpoint-1",
+            },
+        )
+        proposal_id = response.json()["proposal_id"]
+
+        audit_res = client.get(f"/api/v1/audit/{proposal_id}")
+        assert audit_res.status_code == 200
+        logs = audit_res.json()
+        assert len(logs) >= 1
+        assert logs[0]["event_type"] == "PROPOSAL_CREATED"
+        assert logs[0]["proposal_id"] == proposal_id

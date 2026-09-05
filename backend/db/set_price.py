@@ -29,20 +29,20 @@ def set_product_price(product_id: int, new_price_paise: int) -> None:
         product = db.query(Product).filter_by(id=product_id).first()
         
         if not product:
-            print(f"✗ Product {product_id} not found")
+            print(f"[ERROR] Product {product_id} not found")
             sys.exit(1)
         
         old_price = product.current_price
         product.current_price = new_price_paise
         db.commit()
         
-        print(f"✓ Updated Product {product_id}: {product.name}")
-        print(f"  Old price: ₹{old_price/100:.2f} ({old_price} paise)")
-        print(f"  New price: ₹{new_price_paise/100:.2f} ({new_price_paise} paise)")
+        print(f"[OK] Updated Product {product_id}: {product.name}")
+        print(f"  Old price: Rs. {old_price/100:.2f} ({old_price} paise)")
+        print(f"  New price: Rs. {new_price_paise/100:.2f} ({new_price_paise} paise)")
         print(f"  Drift: {abs(new_price_paise - old_price) / old_price * 100:.2f}%")
     
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"[ERROR] Error: {e}")
         db.rollback()
         sys.exit(1)
     
@@ -55,8 +55,8 @@ if __name__ == "__main__":
         print("Usage: python -m backend.db.set_price <product_id> <new_price_in_paise>")
         print()
         print("Examples:")
-        print("  python -m backend.db.set_price 1 350000  # Headphones: ₹2999 -> ₹3500")
-        print("  python -m backend.db.set_price 1 299900  # Restore to ₹2999")
+        print("  python -m backend.db.set_price 1 350000  # Headphones: Rs. 2999 -> Rs. 3500")
+        print("  python -m backend.db.set_price 1 299900  # Restore to Rs. 2999")
         sys.exit(1)
     
     try:
@@ -65,5 +65,5 @@ if __name__ == "__main__":
         set_product_price(product_id, new_price)
     
     except ValueError:
-        print("✗ Arguments must be integers")
+        print("[ERROR] Arguments must be integers")
         sys.exit(1)

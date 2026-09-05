@@ -19,6 +19,7 @@ from backend.db.session import get_db
 from backend.payments.razorpay_client import get_razorpay_client
 from backend.policy.engine import PolicyEngine
 from backend.schemas import (
+    AuditLogRead,
     CheckoutPaymentResponse,
     CheckoutResponse,
     IntentRequest,
@@ -396,7 +397,26 @@ async def verify_payment(
         raise HTTPException(status_code=500, detail=f"Verification error: {str(e)}")
 
 
+@router.get("/audit/{proposal_id}", response_model=list[AuditLogRead])
+async def get_proposal_audit(
+    proposal_id: int,
+    db: Session = Depends(get_db),
+) -> list[AuditLogRead]:
+    """
+    Fetch audit trail for a specific proposal.
+    Read-only compliance endpoint.
+    """
+    proposal = ProposalService.get_proposal(db, proposal_id)
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
 
+    logs = (
+        db.query(AuditLog)
+        .filter_by(proposal_id=proposal_id)
+        .order_by(AuditLog.created_at.asc(), AuditLog.id.asc())
+        .all()
+    )
+    return logs
 
 
 def _audit_policy_decision(
