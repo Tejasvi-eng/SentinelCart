@@ -1,11 +1,20 @@
 """
 AI reasoning engine.
 
-For MVP: simple keyword-based product search.
-In phase 2, this will use actual LLM for NLU and ranking.
+The primary recommendation path uses a hosted LLM through OpenRouter.
+A deterministic keyword parser remains as a reliability fallback.
 
-Agent's responsibility: search/rank products
-Backend's responsibility: validate, fetch authoritative price, create proposal
+Agent responsibility:
+- interpret user intent
+- select from backend-provided catalog candidates
+- generate recommendation reasoning
+
+Backend responsibility:
+- validate selected product
+- fetch authoritative price
+- create proposal
+- enforce policy
+- authorize payment
 """
 
 import json
@@ -42,10 +51,8 @@ SYSTEM_PROMPT = (
 
 class IntentParser:
     """
-    Parse user intent and suggest products.
-    
-    MVP: Simple keyword matching
-    Phase 2: LLM-based NLU and ranking
+    Deterministic fallback product matcher used when the AI provider
+    is unavailable or returns unusable output.
     """
 
     KEYWORD_MAP = {
