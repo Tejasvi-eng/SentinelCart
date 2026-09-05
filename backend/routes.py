@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.agent.proposal_service import ProposalService
-from backend.agent.reasoning import IntentParser
+from backend.agent.reasoning import AIProductRecommender, IntentParser
 from backend.db.models import AuditLog, Order, Product, Proposal
 from backend.db.session import get_db
 from backend.payments.razorpay_client import get_razorpay_client
@@ -70,15 +70,18 @@ async def create_intent_proposal(
     LLM's own price estimate is never used.
     """
     try:
-        # Parse intent to get product ID
-        product_id = IntentParser.parse_intent(request.user_intent, db)
+        # Recommend product via AI recommendation with deterministic fallback
+        product_id, reasoning_text = AIProductRecommender.recommend_product(
+            intent_text=request.user_intent,
+            db=db,
+        )
         
         # Create proposal with DB's authoritative price
         proposal = ProposalService.create_proposal_from_intent(
             db=db,
             idempotency_key=request.idempotency_key,
             product_id=product_id,
-            reasoning_text=f"Interpreted intent: {request.user_intent}",
+            reasoning_text=reasoning_text,
         )
         
         # Fetch product for response
