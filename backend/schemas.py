@@ -170,3 +170,55 @@ class CheckoutResponse(BaseModel):
     product_name: str
     authoritative_current_price_paise: int = Field(description="Current price from DB in paise")
     policy_decision: PolicyDecisionResponse
+
+
+class CheckoutPaymentResponse(BaseModel):
+    """
+    Response when policy decision is ALLOWED.
+    
+    Frontend uses this to open Razorpay Checkout.
+    
+    Important:
+    - key_id is public (safe to send to frontend)
+    - order_id is from Razorpay
+    - amount must be used by frontend (authoritative value)
+    - Secret is NEVER sent to frontend
+    """
+    status: str = Field(default="PAYMENT_READY", description="PAYMENT_READY")
+    proposal_id: int
+    order_id: str = Field(..., description="Razorpay order ID")
+    key_id: str = Field(..., description="Razorpay public key (TEST mode)")
+    amount: int = Field(..., description="Amount in paise")
+    currency: str = Field(default="INR")
+
+
+class PaymentVerificationRequest(BaseModel):
+    """
+    Request to verify a completed payment.
+    
+    Frontend sends this after Razorpay Checkout success handler.
+    
+    Important:
+    - These values come from Razorpay's response, not user input
+    - Backend will verify the signature using DB-stored order ID
+    - Client-provided order_id must match DB order before verification
+    """
+    proposal_id: int = Field(..., description="Our proposal ID")
+    razorpay_order_id: str = Field(..., description="Order ID from Razorpay response")
+    razorpay_payment_id: str = Field(..., description="Payment ID from Razorpay")
+    razorpay_signature: str = Field(..., description="Signature from Razorpay (not secret)")
+
+
+class PaymentVerificationResponse(BaseModel):
+    """
+    Response after payment verification.
+    
+    Signature verification either succeeds or fails.
+    Only on success do we mark the order PAYMENT_SUCCESS.
+    """
+    success: bool = Field(..., description="True if signature verified successfully")
+    proposal_id: int
+    order_id: str
+    payment_id: str
+    message: str
+    details: Optional[dict] = None

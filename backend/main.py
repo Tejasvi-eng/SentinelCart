@@ -3,9 +3,11 @@ FastAPI application entry point.
 
 Provides REST endpoints for the SentinelCart backend.
 """
-
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 
 from backend.routes import router
 
