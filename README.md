@@ -1,20 +1,17 @@
 # SentinelCart
 
-### Policy-Authorized AI Commerce
+### Policy Gateway for Agentic Commerce
 
 > **The agent proposes. The policy engine decides. Razorpay executes.**
 
-SentinelCart is a single-merchant, single-user commerce prototype designed around a simple question:
+AI agents are moving from recommending products toward taking actions on a user's behalf. The difficult question is no longer only *what should the agent buy?* — it is **whether that recommendation is still safe and valid when money is about to move.**
 
-**What should happen when an AI-assisted purchase recommendation becomes unsafe before money is authorized?**
+SentinelCart places an independent, deterministic policy gateway between AI recommendation and payment execution.
 
-Instead of allowing an AI system to directly control checkout, SentinelCart separates **recommendation** from **authorization**.
+The AI can understand intent, select a product, and explain its recommendation. The backend independently validates the product and retrieves the merchant's authoritative price. A deterministic policy engine then evaluates price freshness, spending limits, duplicate protection, and approval requirements.
 
-The recommendation layer can suggest a product and explain why it fits the user's request. The backend then independently validates the product and retrieves its authoritative price before a deterministic policy engine decides whether the transaction can proceed.
+Only an allowed transaction reaches Razorpay.
 
-Only an approved transaction can reach Razorpay.
-
----
 
 ## Why SentinelCart?
 
