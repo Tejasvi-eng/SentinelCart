@@ -929,6 +929,3 @@ Frontend build/lint            ✅
 
 ---
 
-# License
-
-Add the project's chosen license here before publishing if required.
